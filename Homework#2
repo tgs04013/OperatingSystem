@@ -1,0 +1,161 @@
+Operating System HW#2
+2016116790 이 진우
+
+1.개요
+리눅스 개발 환경에서 int main(int argc ,char* argv[]) 구조를 이용한 프로그램에 대해 공부를 하고 기본적인 리눅스 명령어 개념에 대한 이해를 한다. 그리고 command line interface(GLI)를 구현하기 위해 shell을 c언어로 구현하는 것에 대해 공부를 한다. 구현 하는 과정에서 여러 개의 프로세서를 동시에 이용 하기 위한 fork()함수를 토대로 구현한다.
+
+
+2.프로그램 구조 설명
+	2.1 함수에 대한 설명
+	int main(int argc,char* argv) : 사용자가 프로모트에 적히는 순서로 argument 값을 argv 이중배열에 저장한다. argc 값은 argv의 문자열 개수를 나타낸다.
+	int fork() : 자식 프로세서를 생성하여 자식 프로세서의 pid 값을 반환한다.
+	char* strtoke(char *str, char* delimiters);: str의 문자열 값중에 delimiters의 문자열을 기준으로 끊어서 문자열을 저장한다.
+	System(clear) : terminal를 clear 해준다. 
+	char* fgets(char* str, int num, FILE* stream): stream에서 문자열을 str에 복사한다.
+	execv(const char* path,char *argv[]) : path의 프로그램을 실행 시킨다.
+
+3.고찰
+다양한 연산 프로그램을 구현하기 위해서 main 함수에 argument를 넣은 함수를 처음 사용했다. 처음에 어떤 원리로 작동 하는지 몰라서 어려움을 겪었다. 그렇지만 네이버에 검색 해보니 많은 예제들이 있어서 보고 이해하고 구현했다. 그리고 myshell.exe를 구현할 때 execv 함수를 사용하고 “>>” 프롬프트를 printf 문장으로 바로 뒤에 붙였더니 실행이 되지 않았다. execv함수를 사용할 때 printf 문장이 제대로 작동 되지 않는 것을 알게 되었다. 운영체제 시간에 배운 프로세스를 직접 구현하여서 실제로 어떻게 만들어지는 지에 대해 알게 되는 좋은 계기가 되었다.
+
+
+4.프로그램 소스 파일
+div.c
+#include<stdio.h>
+
+int main(int argc,char *argv[]){
+	int ar1,ar2;	
+	//argument 값 정수로 저장
+	sscanf(argv[1],"%d",&ar1);
+	sscanf(argv[2],"%d",&ar2);
+
+	printf("share:%d	the rest:%d\n",ar1/ar2,ar1%ar2);
+
+	return 0;
+}
+
+
+fact.c
+#include<stdio.h>
+
+int main(int argc,char *argv[]){
+	int i,ar1;
+	int fac =1;
+	//argument 값 정수로 저장
+	sscanf(argv[1],"%d",&ar1);
+	//factorial 구현
+	for(i=1;i<=ar1;i++){
+		fac*=i;
+	}
+	
+	printf("%d\n",fac);
+
+	return 0;
+}
+
+sub.c
+#include<stdio.h>
+
+int main(int argc,char *argv[]){
+	int ar1,ar2;
+	//argument 값 정수로 저장
+	sscanf(argv[1],"%d",&ar1);
+	sscanf(argv[2],"%d",&ar2);
+
+	printf("%d\n",ar1-ar2);
+
+	return 0;
+}
+sum.c
+#include<stdio.h>
+
+int main(int argc,char *argv[]){
+	int ar1,ar2;
+	//argument 값 정수로 저장
+	sscanf(argv[1],"%d",&ar1);
+	sscanf(argv[2],"%d",&ar2);
+
+	printf("%d\n",ar1+ar2);
+
+	return 0;
+}
+
+
+myshell.c
+#include<stdio.h>
+#include<string.h>
+#include<unistd.h>	//fork () 를 쓰기 위한 헤더파일
+#include<stdlib.h>	//systme 함수와 exit함수 쓰기 위한 헤더파일
+#include<sys/types.h>   //pid_t 를 쓰기 위한 헤더파일
+#include<sys/wait.h>	//wait()를 쓰기 위한 헤더파일
+int main(){
+	
+	pid_t pid;		//프로세스 번호를 저장하는 값
+	char total[100];	//실행 시키고 싶은 프로그램 이름 + 입력 값	
+	int i=0;
+	char* argv[100];	//main함수의 argv값
+	
+	system("clear"); //terminal 클리어
+	printf(">>");	//myshell prompt 구현
+	while(fgets(total,sizeof(total)-1,stdin)){	//terminal에서 입력 한 값 total 문자열에 저장
+		pid = fork();		//자식 프로세서 생성
+		if ( pid == 0 ){	//자식 프로세서
+			// 입력한 문자열 띄어쓰기 기준으로 나눠서 저장
+			argv[i] = strtok(total," "); 			
+			while(argv[i] != NULL)
+			{
+				i+=1;
+				argv[i] = strtok(NULL," ");
+			}
+			argv[i+1] = NULL;	//입력한 문자열을 나눠서 저장 다 한 경우 argv 값 NULL포인트 저장
+		
+			
+			if(strcmp(argv[0],"./sum")==0){		//sum 프로그램 실행
+				execv("/home/jinwoo/os/test/sum",argv);
+				
+			}
+			else if(strcmp(argv[0],"./sub")==0){	//sub 프로그램 실행
+				execv("/home/jinwoo/os/test/sub",argv);
+				
+			}
+			else if(strcmp(argv[0],"./div")==0){	//div 프로그램 실행
+				execv("/home/jinwoo/os/test/div",argv);
+				
+			}					
+			else if(strcmp(argv[0],"./fact")==0){	//fact 프로그램 실행
+				execv("/home/jinwoo/os/test/fact",argv);
+				
+			}
+			
+		
+			exit(0);//자식 프로세서 종료
+		}	
+		if ( pid == -1 ){	//자식 프로세서 생성 실패 시
+			printf("Error\n");
+		}
+	
+		if(pid>0) {		//부모 프로세서
+			wait(0);	//자식 프로세서 끝날때 까지 대기
+		
+		}
+	printf(">>");		//프롬트 생성
+		
+	}
+	
+	
+
+		
+}
+Makefile
+myshell.exe : myshell.o
+	gcc -o myshell.exe myshell.o
+
+myshell.o : myshell.c
+	gcc -c -o myshell.o myshell.c
+
+clean:
+	rm *.o myshell.exe
+
+5.자료 출처
+main(int argc,char* argv):	https://dojang.io/mod/page/view.php?id=696
+fork() 함수: https://blog.naver.com/her0gyu/221287213111
+exec() 함수: https://blog.naver.com/ryutuna/100167308796
