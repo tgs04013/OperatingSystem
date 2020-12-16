@@ -1,0 +1,259 @@
+# Operating System HW#1
+2016116790 이 진우
+
+1.개요
+운영체제에 필요한 기본 C언어 문법인 포인터와 동적할당 그리고 C언어 자료구조를 이용하는 과제이다. C언어를 이용하여 학번과 이름을 구조체 Student으로 정의한 후 10명 이상의 학생을 배열과 단일 연결 리스트로 작성한다. 그리고 이름을 입력하면 학번이 나오고 학번을 입력하면 이름이 나오는 검색 프로그램을 각각 배열, 단일 연결 리스트에 만든다. 그리고 makefile을 이용하여 리눅스에서 간편하게 프로그램을 실행시키는 법을 학습한다.
+
+
+2.프로그램 구조 설명
+	2.1 함수에 대한 설명
+	strcmp(const char *_Str1, const char *_Str2) 
+		:stdlib.h 헤더파일안에 있는 문자열 비교함수 이다. Str1 과 Str2 가 같으면 0을 반환하고 다르면 1을 반환한다.
+	CreateNode(char *Name, char*Number)
+		:선형리스트 구조에서 한 개의 노드를 생성하는 함수이다. 노드 구조체의 name 과 number에 함수의 인자인 Name 과 Number를 각각 넣어준 후 Node를 반환한다.
+	AddNode(NODE** Head, NODE* newNode)
+		:선형리스트에 노드를 더하는 함수이다. 리스트에 노드가 없다면 함수의 인자인 newNode를 리스트의 head로 생성하고 노드가 있다면 리스트의 끝 노드에 newNode를 더한다.
+	strcpy(char *_Dest, const char *_Source)
+		:stdlib.h 헤더파일 안에 있는 문자열 복사 함수이다. Dest 문자열 안에 Source 문자열을 복사해서 문자열을 반환한다.
+	void Array()
+		:학생들의 정보를 배열로 구성하여 검색하는 프로그램을 실행시키는 함수
+	void List()
+		:학생들의 정보를 linked list로 구성하여 검색하는 프로그램을 실행시키는 함수
+	void main()
+		:사용자에게 배열과 리스트중 어느 것을 사용할 것인지를 switch 문으로 받아서 각각의 함수를 실행 시키는 함수
+
+
+3.고찰
+리눅스를 배우기 전에 비주얼 스튜디오로 사용할 때 단일 연결 리스트 CreateNode 함수를 사용해서 함수에 넣은 String 인자를 Node 안의 String에 복사하는 과정 중 String을 = 연산을 사용해서 복사를 했는데 위에 실패 화면같이 복사를 못하는 것을 확인했다. 이때 네이버를 이용해서 검색을 해보니 String 은 = 연산을 사용할 수 없고 strcpy 함수를 이용해서 복사를 해야 하는 것을 깨달았다. 오랜만에 c언어를 사용해보니 기초적인 것 밖에 기억을 하지 못해서 실수를 범했다. c언어의 잊어버린 내용들을 다시 상기시키는 좋은 계기가 된 것 같다. 그리고 리눅스를 배운 후 makefile을 하여해보았는데 처음에 비주얼 스튜디오에서 사용한 소스를 그대로 사용해서 make 해보니 gcc 컴파일 할 때 scanf_s를 컴파일 못하는 것을 발견했다. 그래서 scanf로 바꿔서 사용하니 컴파일이 잘 되었다. 리눅스에서는 scanf_s라는 문법을 사용하면 안 되는 것을 깨달았다.
+
+
+
+
+
+
+4.프로그램 소스 파일
+Array.c
+	#include<stdio.h>
+	#include<string.h>
+
+	//구조체 정의
+	typedef struct _Student {
+		char name[10];
+		char number[10];
+	}Student;
+
+	//Array 함수 생성
+	void Array(){
+		char search[20];	//검색 단어
+		int i = 0;
+		search[0] = '\0';	//검색단어 초기화
+
+
+	//배열정의
+
+	Student arr[11] = {
+		{.name = "이진우",.number = "4132"},
+		{.name = "김도균",.number = "3124"},
+		{.name = "노가현",.number = "9759"},
+		{.name = "백지원",.number = "0182"},
+		{.name = "양영우",.number = "5828"},
+		{.name = "윤동준",.number = "0295"},
+		{.name = "윤성한",.number = "8859"},
+		{.name = "박재성",.number = "2341"},
+		{.name = "김현규",.number = "9572"},
+		{.name = "천소현",.number = "0123"}
+	};
+	//검색
+	printf("검색: ");
+	scanf("%s", search); //검색 단어 입력
+	for (int i = 0; i < 10; i++) {
+		//검색 단어와 이름이 같은지 확인
+		if (strcmp(arr[i].name, search) == 0) {
+			printf("%s\n", arr[i].number);  //이름이면 학번출력
+			break;		  // 프로그램 종료
+			}	
+		//검색 단어와 번호가 같은지 확인
+		if (strcmp(arr[i].number, search) == 0) {
+			printf("%s\n", arr[i].name);	//학번이면 이름출력
+			break;		//프로그램 종료
+			}	
+		if(i==9){//배열 끝까지 왔을 때
+			printf("없는 정보입니다\n"); //배열에 없는 단어 일 경우 출력
+    			}		
+
+		}
+	}
+
+List.c
+	#include<stdio.h>
+	#include<string.h>
+	#include<stdlib.h>
+
+
+
+	//노드 정의
+	typedef struct node {
+		char name[10];
+		char number[10];	
+		struct node* next;
+	}NODE;
+
+	//노드 생성 함수
+	NODE* CreateNode(char *Name, char *Number) {
+		NODE* newnode = (NODE*)malloc(sizeof(NODE)); //노드 동적 할당
+		if (newnode != NULL) {	//동정 할당한 값이 초과할 경우 방지
+	
+			strcpy(newnode->name, Name);	//노드안에 이름을 복사
+			strcpy(newnode->number, Number);//노드안에 학번을 복사
+			newnode->next = NULL;	//노드의 포인터 NULL
+
+			return newnode;	//노드를 반환
+		}
+		else {// 
+			printf("용량을 초과헸습니다");	//동적 할당한 값을 초과한 경우
+		}
+	}
+	//list에 node를 추가하는 함수
+	void AddNode(NODE** Head, NODE* newNode) {
+	
+		//list 에 노드가 없는 경우
+		if ((*Head) == NULL) {
+			*Head = newNode;	//새로운 노드 -> 헤드
+		}
+		else { //list에 노드가 있는 경우
+			NODE* horse = (*Head);	//헤드로 설정된 노드를 horse에 넣음
+			while (horse->next != NULL) { //horse 노드의 다음 노드가 없을때까지
+				horse = horse->next;	//horse 다음노드를 horse로 만듬
+			}
+
+			horse->next = newNode; //list 끝에 간 horse노드의 다음node에 newnode를 넣음 
+		}
+	}
+
+
+
+  
+
+	int List(void) {
+		char search[10];	//탐색 단어
+		search[0] = '\0';	//탐색 단어 초기화
+		NODE* Head = NULL;	//Head 생성
+		NODE* Search = NULL;	//Search 노드 생성
+		//List 생성
+		NODE* node1 = CreateNode("이진우", "4132");
+		AddNode(&Head, node1);
+		NODE* node2 = CreateNode("김도균", "3124");
+		AddNode(&Head, node2);
+		NODE* node3 = CreateNode("노가현", "9759");
+		AddNode(&Head, node3);
+		NODE* node4 = CreateNode("백지원", "0182");
+		AddNode(&Head, node4);
+		NODE* node5 = CreateNode("양영우", "5828");
+		AddNode(&Head, node5);
+		NODE* node6 = CreateNode("윤동준", "0295");
+		AddNode(&Head, node6);
+		NODE* node7 = CreateNode("윤성한", "8859");
+		AddNode(&Head, node7);
+		NODE* node8 = CreateNode("박재성", "2341");
+		AddNode(&Head, node8);
+		NODE* node9 = CreateNode("김현규", "9572");
+		AddNode(&Head, node9);
+		NODE* node10 = CreateNode("천소현", "0123");
+		AddNode(&Head, node10);
+
+	
+	
+		printf("검색: ");
+		scanf("%s", search);
+		Search = Head; //Search 노드에 헤드 노드를 넣어준다
+	
+		while (1) {		//무한반복
+			//검색 단어와 이름이 같은지 확인
+			if (strcmp(Search->name, search) == 0) {
+				printf("%s\n", Search->number);
+				break;	//반복을 끝냄
+			}
+			//검색 단어와 학번이 같은지 확인
+			else if (strcmp(Search->number, search) == 0) {
+				printf("%s\n", Search->name);
+				break;	//반복을 끝냄
+			}
+
+		
+		
+			//Search 노드가 List의 끝 노드 인경우
+			//검색 단어와 일치하지 않을 때
+			if (Search->next ==NULL) {	
+				printf("없는 정보입니다\n");	
+				break;	//반복을 끝냄
+			}
+			Search = Search->next;	//Search 노드에 정보가 없는 경우 다음 노드를 Search에 넣음
+		}
+	
+		//동적할당된 메모리를 없앰
+		free(node10);
+		free(node9);
+		free(node8);
+		free(node7);
+		free(node6);
+		free(node5);
+		free(node4);
+		free(node3);
+		free(node2);
+		free(node1);
+	
+	
+	}
+
+main.c
+	#include<stdio.h>
+	#include<string.h>
+	#include<stdlib.h>
+
+
+	void Array();
+	void List();
+
+	//main 함수
+	int main(void) {
+		int i=0;
+		printf("배열 0번 리스트 1번 눌러주세요\n"); //배열 ,리스트중 선택
+		scanf("%d",&i);
+		switch(i){
+			case 0:	//배열
+				Array();
+				break;
+			case 1:	//리스트
+				List();
+				break;
+			default:
+				printf("잘못 누르셨습니다.\n");
+		}
+	
+	}
+Makefile
+	Search_exe : main.o Array.o List.o 
+		gcc -o Search_exe main.o Array.o List.o
+
+	main.o: main.c
+		gcc -c -o main.o main.c
+
+	Array.o: Array.c	
+		gcc -c -o Array.o Array.c
+
+	List.o: List.c
+		gcc -c -o List.o List.c
+
+	clean:	
+		rm *.o Search_exe
+
+
+
+
+6.자료 출처
+문자열 함수: https://blog.naver.com/kwy1052aa/221749530805
+구조체 : https://blog.naver.com/zlatmgpdjtiq/221713851080
+선형리스트:
+https://www.youtube.com/watch?v=S49nm3SYZmY&list=PLLcbGhhl4sQCiZxLuqDDDH6q-rc4wyaKe&index=9
+Makefile: https://bowbowbow.tistory.com/12
+
