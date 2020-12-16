@@ -1,0 +1,112 @@
+Operating System HW#3
+2016116790 이 진우
+
+1.개요
+
+-여러 개의 프로세서를 생성하여 다루는 방법으로 thread를 사용하여 직접 프로세서를 생성하고 사용한다. 
+-많은 thread를 생성한 후 프로그램을 실행 시킬 때 발생하는 race condition에 대해서 알아본다.
+-이 프로그램을 정상적으로 작동시키기 위해서 pthread_create()함수와 pthread_exit() 함수, pthread_join() 함수를 적절히 사용한다.
+
+
+
+2.프로그램 구조 설명
+	2.1 함수에 대한 설명
+	void* add(void *arg1) : 사용자가 반복수를 설정해서 전역변수 arg 값에 반복수만큼 1씩 더하는 함수
+	void* sub(void *arg1) : 사용자가 반복 수를 설정해서 전역변수 arg 값에 반복 수만큼 1씩 빼는 함수									
+  pthread_create(pthread_t *thread, const pthread_attr_t*attr, void*(*start_routine)(void),void *arg) 	: thread를 생성하는 함수
+	pthread_join(pthread_t *thread, void **status) : *thread가 끝날 때까지 대기시키는 함수
+
+
+
+3.고찰
+ 라즈베리파이를 연결해서 설정하는 과정이 복잡하고 집에서 하지 못할　때는 라즈베리파이가 없으면 프로그램을 실행 못하는 불편함이 있었습니다. 그래서 2주차 homework부터 VM virtual box를 깔아서 노트북만 가지고 어디서든 실행을 할 수 있어서 사용하게 되었습니다. 이전 과제 까지는 Vm을 사용해도 과제를 하는데 문제가 없었습니다. 하지만 이번과제를 하면서 처음으로 Vm에 문제가 생겼습니다. 반복하는 횟수를 1000번 했을 때 결과화면입니다. 이 프로그램을 돌리면 결과화면이 다양한 숫자가 나와야 하는데 지금처럼 계속 일정한 값이 나왔습니다. 코드 실수 인지 알았지만 계속 공부한 결과 코드에는 이상이 없는 것을 확인했습니다. 그래서 작동이 되지 않는 이유를 찾기 위해서 스레드를 각각 5000개씩 만들 때 I값을 인자로 받아서 add,sub 함수에 출력하는 프로그램을 만든 결과 I가 순서대로 실행되지 않고 무작위로 실행되는 것을 볼 수 있었습니다. 
+ 현재까지 왜 vm에서 실행이 제대로 안되는지를 모르겠습니다. 조교님 말씀대로 gcc 업데이트도 했고  vm 업데이트도 했는데 작동은 바뀌는게 없었습니다. 그래서 저는 라즈베리파이를 이용하게 되었습니다.라즈베리파이를 사용한 결과 10번 반복할　때는 50에서 변하는 게 거의 없는 것을 보았고 100번 반복할 때는 조금 씩 값이 바뀌는 것을 확인했습니다. 그리고 1000번 반복했을 때는 기존 값과 많이 다른 값들이 나오는 것을 확인했습니다. 수학적으로 봤을 때 결과값들이 항상 50으로 나와야 한다고 생각합니다. 왜냐하면 반복하는 수가 add 함수와 sub 함수가 똑같고 실행되는 thread의 개수도 똑같기 때문에 입력한 수는 변하지 않아야 합니다. 하지만 이 프로그램을 돌린 결과 50이 아닌 다른 수들이 나오는 것으로 확인되었습니다. 실제 결과가 다른 이유는 인터넷을 이용해 찾아보니 여러 개의 프로세스들이 공유하는 자원에 동시적으로 접근 할 때 접근 타이밍과 순서에 따라 결과가 달라지는 경쟁 상태(race condition)였기 때문입니다. 이 프로그램에서 전역 변수 arg 값을 여러 개의 thread가 공유를 했고 thread의 순서와 접근 타이밍을 정해주지 않았기 때문에 thread 들이 충돌이 일어나면서 값이 일정해지지 않는 것 같습니다. 이러한 문제를 해결하기 위해서는 프로세스 동기화를 사용한다고 합니다.
+ 이번 과제를 하면서 이전함수와는 다른 pthread 함수의 차이점을 알 수 있었습니다. 기존 함수들은 그저 헤더파일만 include 해서 사용할 수 있었는데 pthread 함수들은 gcc 컴파일 할 때까지 헤더파일을 추가해줘야 한다는 점이 신기했습니다. 
+ 저는 여태까지 해왔던 과제들 보다 이번 과제가 쉬었다는 것을 느꼈습니다. 어려워하는 우리를 위해서 교수님이 배려를 해주셔서 감사합니다. 운영체제에 대한 내용을 더욱 더 이해하고 쉽게 다가갈 수 있는 계기가 된 것 같습니다.  
+
+4.프로그램 소스 파일
+***********test.c*************
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+ 
+volatile int arg;	//전역변수
+
+void* add(void *arg1)	//1씩 1000번 더하는 함수
+{
+        int i;
+        int k = *((int*)arg1);	//사용자가 선택한 반복 수 인자로 받아서 k값에 저장
+       	for(i=0;i<k;i++)	
+	{
+		arg += 1;			//k번 arg 값에 +1
+		
+	}
+	pthread_exit(0);	//thread 종료
+}
+void* sub(void *arg1)	//1씩 1000번 빼는 함수
+{
+        int i;
+		int k = *((int*)arg1);  //사용자가 선택한 반복 수 인자로 받아서 k값에 저장
+        
+       	for(i=0;i<k;i++)	
+	{
+		arg -= 1;	//k번 arg 값에 -1
+		
+	}
+	pthread_exit(0);	//thread 종료
+}
+ 
+int main(int argc,char **argv){
+	int i,j,k,l=0;
+	pthread_t thread1[5000]; 	//add thread id 생성
+	pthread_t thread2[5000];	//sub thread id 생성
+	sscanf(argv[1],"%d",&arg);	//전역변수 arg에 argv[1] 입력 값 넣음
+	printf("\t전역변수에 몇번씩 더하거나 빼시겠습니까?\n");  
+	printf("1.10 		2.100		3.1000	(번호를 적으시오)\n"); 
+	scanf("%d",&k);
+	if(k==1)	//1.10 선택한 경우
+	{
+		l=10;
+	}
+	else if(k==2)	//2.100 선택한 경우
+	{
+		l=100;
+	}
+	else if(k==3)	//3.1000 선택한 경우
+	{
+		l=1000;
+	}
+	else                 //잘못 입력한 경우
+	{
+		printf("잘못 입력했습니다");
+		return 0;
+	}
+	for(j=0;j<30;j++)		//과제 (ㄱ) 과정 30번 시행
+	{
+ 		for(i=0;i<5000;i++)	//add thread, sub thread 각각 5000개씩 생성
+		{
+			pthread_create(&thread1[i],NULL,add,(void*)(&l));	//add thread 생성
+			
+			pthread_create(&thread2[i],NULL,sub,(void*)(&l));	//sub thread 생성
+			pthread_join(thread2[i],0);	//thread2[i]가 종료할때까지 대기
+			pthread_join(thread1[i],0);	//thread1[i]가 종료할때까지 대기
+			
+		}
+		
+		printf("%d\n",arg);	// 총 10000개의 thread 수행 후 전역변수 값 출력
+		
+	}
+	
+}
+***************Makefile******************
+test : test.o
+	gcc -o test test.o -lpthread
+test.o : test.c
+	gcc -c -o test.o test.c
+clean : 	
+	rm *.o test
+
+
+5.자료 출처
+pthread_join(): https://blog.naver.com/no1rogue/30096959304
+race condition : https://blog.naver.com/hirit808/221762802800
